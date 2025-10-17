@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ template.nome }} - Sistema de Workflow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-file-earmark-text"></i> {{ template.nome }}</h1>
+    {% if user.perfil in 'ADMIN,GESTOR' %}
+    <div>
+        <a href="{% url 'template_update' template.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        <a href="{% url 'etapa_create' template.pk %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Nova Etapa
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h5>Descrição</h5>
+                <p>{{ template.descricao }}</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p><strong>Status:</strong>
+                            {% if template.ativo %}
+                            <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Criado por:</strong> {{ template.criado_por.get_full_name|default:template.criado_por.username }}</p>
+                        <p><strong>Data:</strong> {{ template.data_criacao|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-list-ol"></i> Etapas do Fluxo</h5>
+            </div>
+            <div class="card-body">
+                {% if etapas %}
+                <div class="list-group">
+                    {% for etapa in etapas %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">
+                                    <span class="badge bg-primary">{{ etapa.ordem }}</span>
+                                    {{ etapa.nome }}
+                                </h6>
+                                <p class="mb-1 text-muted">{{ etapa.descricao|truncatewords:15 }}</p>
+                                <small>
+                                    <span class="badge bg-info">{{ etapa.get_tipo_display }}</span>
+                                    Prazo: {{ etapa.prazo_dias }} dias
+                                    {% if etapa.requer_aprovacao %}
+                                    <span class="badge bg-warning">Requer Aprovação</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            {% if user.perfil in 'ADMIN,GESTOR' %}
+                            <div>
+                                <a href="{% url 'etapa_update' etapa.pk %}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Nenhuma etapa definida para este template.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informações</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Total de Etapas:</strong> {{ etapas.count }}</p>
+                <p><strong>Status:</strong>
+                    {% if template.ativo %}
+                    <span class="badge bg-success">Ativo</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inativo</span>
+                    {% endif %}
+                </p>
+                <p><strong>Última Atualização:</strong> {{ template.data_atualizacao|date:"d/m/Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

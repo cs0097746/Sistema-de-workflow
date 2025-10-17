@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Encaminhar Processo - Sistema de Workflow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="bi bi-arrow-right-circle"></i> Encaminhar Processo</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5>Processo: {{ processo.numero_processo }}</h5>
+                    <p class="mb-0"><strong>Título:</strong> {{ processo.titulo }}</p>
+                    <p class="mb-0"><strong>Etapa Atual:</strong> {{ processo.etapa_atual.nome }}</p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-send"></i> Encaminhar
+                        </button>
+                        <a href="{% url 'processo_detail' processo.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Consultar Processos - Sistema de Workflow{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="bi bi-list-task"></i> Todos os Processos</h1>
+
+<!-- Filtros -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtros</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            {{ filtro_form|crispy }}
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+                <a href="{% url 'processo_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Limpar Filtros
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Processos -->
+<div class="card shadow">
+    <div class="card-body">
+        {% if processos %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Título</th>
+                        <th>Template</th>
+                        <th>Status</th>
+                        <th>Etapa Atual</th>
+                        <th>Responsável</th>
+                        <th>Criado em</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for processo in processos %}
+                    <tr>
+                        <td><strong>{{ processo.numero_processo }}</strong></td>
+                        <td>{{ processo.titulo|truncatewords:5 }}</td>
+                        <td>{{ processo.template.nome }}</td>
+                        <td>
+                            {% if processo.status == 'CONCLUIDO' %}
+                            <span class="badge bg-success">{{ processo.get_status_display }}</span>
+                            {% elif processo.status == 'EM_ANDAMENTO' %}
+                            <span class="badge bg-warning">{{ processo.get_status_display }}</span>
+                            {% elif processo.status == 'CANCELADO' %}
+                            <span class="badge bg-danger">{{ processo.get_status_display }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ processo.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ processo.etapa_atual.nome|default:"N/A" }}</td>
+                        <td>{{ processo.usuario_atual.get_full_name|default:"N/A" }}</td>
+                        <td>{{ processo.data_criacao|date:"d/m/Y" }}</td>
+                        <td>
+                            <a href="{% url 'processo_detail' processo.pk %}" class="btn btn-sm btn-primary" title="Ver Detalhes">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginação -->
+        {% if is_paginated %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">Primeira</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle"></i> Nenhum processo encontrado com os filtros aplicados.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

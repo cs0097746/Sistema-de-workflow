@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Sistema de Workflow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </h1>
+    
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Aguardando Ação</h5>
+                            <h2 class="mb-0">{{ processos_aguardando }}</h2>
+                        </div>
+                        <i class="bi bi-hourglass-split" style="font-size: 3rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Concluídos</h5>
+                            <h2 class="mb-0">{{ processos_concluidos }}</h2>
+                        </div>
+                        <i class="bi bi-check-circle" style="font-size: 3rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Templates Ativos</h5>
+                            <h2 class="mb-0">{{ templates_disponiveis.count }}</h2>
+                        </div>
+                        <i class="bi bi-file-earmark-text" style="font-size: 3rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Processos Recentes</h5>
+                            <h2 class="mb-0">{{ processos_recentes.count }}</h2>
+                        </div>
+                        <i class="bi bi-clock-history" style="font-size: 3rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Processos Recentes -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Meus Processos Recentes</h5>
+                </div>
+                <div class="card-body">
+                    {% if processos_recentes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Título</th>
+                                    <th>Etapa</th>
+                                    <th>Status</th>
+                                    <th>Atualizado</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for processo in processos_recentes %}
+                                <tr>
+                                    <td><strong>{{ processo.numero_processo }}</strong></td>
+                                    <td>{{ processo.titulo|truncatewords:5 }}</td>
+                                    <td>{{ processo.etapa_atual.nome|default:"N/A" }}</td>
+                                    <td>
+                                        {% if processo.status == 'CONCLUIDO' %}
+                                        <span class="badge bg-success">{{ processo.get_status_display }}</span>
+                                        {% elif processo.status == 'EM_ANDAMENTO' %}
+                                        <span class="badge bg-warning">{{ processo.get_status_display }}</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ processo.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ processo.data_atualizacao|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'processo_detail' processo.pk %}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-4">Nenhum processo em andamento.</p>
+                    {% endif %}
+                    <div class="text-center">
+                        <a href="{% url 'meus_processos' %}" class="btn btn-outline-primary">
+                            Ver Todos os Meus Processos <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Logs Recentes -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Atividades Recentes</h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if logs_recentes %}
+                    <ul class="list-unstyled">
+                        {% for log in logs_recentes %}
+                        <li class="mb-3 pb-3 border-bottom">
+                            <small class="text-muted d-block">{{ log.data_hora|date:"d/m/Y H:i" }}</small>
+                            <strong>{{ log.get_acao_display }}</strong>
+                            <p class="mb-0 small">{{ log.descricao|truncatewords:10 }}</p>
+                            <small class="text-muted">{{ log.usuario.get_full_name|default:log.usuario.username }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted text-center py-4">Nenhuma atividade recente.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Ações Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'processo_create' %}" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Novo Processo
+                        </a>
+                        <a href="{% url 'processo_list' %}" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Consultar Processos
+                        </a>
+                        {% if user.perfil in 'ADMIN,GESTOR' %}
+                        <a href="{% url 'template_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-gear"></i> Gerenciar Templates
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

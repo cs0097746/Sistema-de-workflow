@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ processo.numero_processo }} - Sistema de Workflow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Informações do Processo -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-file-earmark-text"></i> {{ processo.numero_processo }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <h5>{{ processo.titulo }}</h5>
+                <p class="text-muted">{{ processo.descricao|default:"Sem descrição" }}</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p><strong>Template:</strong> {{ processo.template.nome }}</p>
+                        <p><strong>Status:</strong> 
+                            {% if processo.status == 'CONCLUIDO' %}
+                            <span class="badge bg-success">{{ processo.get_status_display }}</span>
+                            {% elif processo.status == 'EM_ANDAMENTO' %}
+                            <span class="badge bg-warning">{{ processo.get_status_display }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ processo.get_status_display }}</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Etapa Atual:</strong> {{ processo.etapa_atual.nome|default:"N/A" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Criado por:</strong> {{ processo.criado_por.get_full_name|default:processo.criado_por.username }}</p>
+                        <p><strong>Responsável Atual:</strong> {{ processo.usuario_atual.get_full_name|default:"N/A" }}</p>
+                        <p><strong>Data de Criação:</strong> {{ processo.data_criacao|date:"d/m/Y H:i" }}</p>
+                        {% if processo.data_conclusao %}
+                        <p><strong>Data de Conclusão:</strong> {{ processo.data_conclusao|date:"d/m/Y H:i" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if pode_executar %}
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i> Este processo está aguardando sua ação.
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'processo_executar' processo.pk %}" class="btn btn-success">
+                        <i class="bi bi-play-circle"></i> Executar Etapa
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Histórico de Etapas -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Histórico de Etapas</h5>
+            </div>
+            <div class="card-body">
+                {% if etapas_executadas %}
+                {% for etapa_exec in etapas_executadas %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <strong>{{ etapa_exec.etapa.nome }}</strong>
+                        {% if etapa_exec.resultado == 'APROVADO' %}
+                        <span class="badge bg-success float-end">
+                        {% elif etapa_exec.resultado == 'REJEITADO' %}
+                        <span class="badge bg-danger float-end">
+                        {% else %}
+                        <span class="badge bg-secondary float-end">
+                        {% endif %}
+                            {{ etapa_exec.get_resultado_display }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Executado por:</strong> {{ etapa_exec.executado_por.get_full_name|default:etapa_exec.executado_por.username }}</p>
+                        <p><strong>Data:</strong> {{ etapa_exec.data_inicio|date:"d/m/Y H:i" }} 
+                            {% if etapa_exec.data_conclusao %}
+                            - {{ etapa_exec.data_conclusao|date:"d/m/Y H:i" }}
+                            {% endif %}
+                        </p>
+                        {% if etapa_exec.observacoes %}
+                        <p><strong>Observações:</strong> {{ etapa_exec.observacoes }}</p>
+                        {% endif %}
+                        
+                        <!-- Documentos anexados -->
+                        {% if etapa_exec.documentos.all %}
+                        <div class="mt-3">
+                            <strong>Documentos:</strong>
+                            <ul class="list-group list-group-flush">
+                                {% for doc in etapa_exec.documentos.all %}
+                                <li class="list-group-item">
+                                    <i class="bi bi-file-earmark"></i> 
+                                    <a href="{{ doc.arquivo.url }}" target="_blank">{{ doc.nome }}</a>
+                                    <small class="text-muted">({{ doc.get_tamanho_formatado }})</small>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">Nenhuma etapa executada ainda.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Logs de Auditoria -->
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Auditoria</h5>
+            </div>
+            <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                {% if logs %}
+                <ul class="list-unstyled">
+                    {% for log in logs %}
+                    <li class="mb-3 pb-3 border-bottom">
+                        <small class="text-muted d-block">{{ log.data_hora|date:"d/m/Y H:i" }}</small>
+                        <strong>{{ log.get_acao_display }}</strong>
+                        <p class="mb-0 small">{{ log.descricao }}</p>
+                        <small class="text-muted">{{ log.usuario.get_full_name|default:log.usuario.username }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted text-center">Nenhum log de auditoria.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

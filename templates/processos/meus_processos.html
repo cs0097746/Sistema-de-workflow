@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Meus Processos - Sistema de Workflow{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="bi bi-inbox"></i> Meus Processos</h1>
+
+<div class="card shadow">
+    <div class="card-body">
+        {% if processos %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Título</th>
+                        <th>Template</th>
+                        <th>Etapa Atual</th>
+                        <th>Última Atualização</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for processo in processos %}
+                    <tr>
+                        <td><strong>{{ processo.numero_processo }}</strong></td>
+                        <td>{{ processo.titulo }}</td>
+                        <td>{{ processo.template.nome }}</td>
+                        <td>{{ processo.etapa_atual.nome }}</td>
+                        <td>{{ processo.data_atualizacao|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'processo_detail' processo.pk %}" class="btn btn-sm btn-primary" title="Ver Detalhes">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'processo_executar' processo.pk %}" class="btn btn-sm btn-success" title="Executar">
+                                <i class="bi bi-play-circle"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle"></i> Você não tem processos aguardando ação no momento.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+# Core
+Django>=4.2,<5.0
+Pillow>=10.0.0
+python-decouple>=3.8
+
+# Forms
+django-crispy-forms>=2.0
+crispy-bootstrap5>=0.7
+
+# Database - PostgreSQL (opcional, SQLite é padrão)
+# Descomente a linha abaixo quando migrar para PostgreSQL:
+# psycopg2-binary>=2.9.0
