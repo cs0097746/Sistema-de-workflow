@@ -16,7 +16,6 @@ services:
       timeout: 5s
       retries: 5
 
-
   web:
     build:
       context: .
@@ -33,7 +32,6 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     restart: unless-stopped
-
 
 volumes:
   postgres_data:

@@ -41,7 +41,23 @@ SQL_PROCEDURES = [
     END;
     $$;
     """),
-    ("sp_cancelar_processo", """<SQL da procedure aqui>"""),
+    ("sp_cancelar_processo", """CREATE OR REPLACE PROCEDURE sp_cancelar_processo(p_processo_id BIGINT, p_usuario_id BIGINT)
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        UPDATE processos_processoinstancia
+        SET status = 'CANCELADO', data_atualizacao = NOW()
+        WHERE id = p_processo_id;
+
+        UPDATE processos_etapaexecutada
+        SET resultado = 'CANCELADO'
+        WHERE processo_id = p_processo_id;
+
+        INSERT INTO processos_logauditoria (processo_id, usuario_id, acao, descricao, data_hora)
+        VALUES (p_processo_id, p_usuario_id, 'CANCELAMENTO', 'Processo cancelado pelo usuário', NOW());
+    END;
+    $$;
+    """),
 ]
 
 class Migration(migrations.Migration):

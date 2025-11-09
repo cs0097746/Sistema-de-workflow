@@ -333,7 +333,7 @@ def processo_executar_etapa(request, pk):
 
 @login_required
 def processo_encaminhar(request, pk):
-    """Encaminhar processo para próxima etapa (via stored procedure)"""
+    """Encaminhar processo para próxima etapa via stored procedure"""
     processo = get_object_or_404(ProcessoInstancia, pk=pk)
 
     # Verifica permissão
@@ -353,8 +353,8 @@ def processo_encaminhar(request, pk):
                     encaminhar_processo(
                         processo_id=processo.id,
                         proxima_etapa_id=proxima_etapa.id,
-                        usuario_id=usuario_destino.id,
-                        condicao=observacoes
+                        usuario_id=request.user.id,
+                        observacao=observacoes
                     )
 
                 messages.success(
@@ -365,7 +365,6 @@ def processo_encaminhar(request, pk):
 
             except Exception as e:
                 messages.error(request, f'Erro ao encaminhar processo: {str(e)}')
-
     else:
         form = EncaminharProcessoForm(etapa_atual=processo.etapa_atual)
 
