@@ -12,7 +12,7 @@ from .models import (
     TemplateProcesso, Etapa, Encaminhamento,
     ProcessoInstancia, EtapaExecutada, Documento, LogAuditoria
 )
-from processos.services import encaminhar_processo
+from processos.services import *
 from .forms import (
     TemplateProcessoForm, EtapaForm, EncaminhamentoForm,
     ProcessoInstanciaForm, EtapaExecutadaForm, DocumentoForm,
@@ -134,9 +134,20 @@ def etapa_create(request, template_pk):
     if request.method == 'POST':
         form = EtapaForm(request.POST, template=template)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Etapa criada com sucesso!')
-            return redirect('template_detail', pk=template_pk)
+            try:
+                criar_etapa_via_sp(
+                    template_id=template.id,
+                    nome=form.cleaned_data['nome'],
+                    ordem=form.cleaned_data['ordem'],
+                    responsavel_id=form.cleaned_data['responsavel'].id,
+                    prazo_dias=form.cleaned_data['prazo_dias'],
+                    descricao=form.cleaned_data['descricao'],
+                    usuario_id=request.user.id
+                )
+                messages.success(request, 'Etapa criada com sucesso (via procedure)!')
+                return redirect('template_detail', pk=template_pk)
+            except Exception as e:
+                messages.error(request, f'Erro ao criar etapa: {str(e)}')
     else:
         # Sugere a próxima ordem
         ultima_ordem = template.etapas.count()
@@ -151,7 +162,7 @@ def etapa_create(request, template_pk):
 
 @login_required
 def etapa_update(request, pk):
-    """Editar etapa"""
+    """Editar etapa via stored procedure"""
     etapa = get_object_or_404(Etapa, pk=pk)
     template = etapa.template
 
@@ -162,9 +173,20 @@ def etapa_update(request, pk):
     if request.method == 'POST':
         form = EtapaForm(request.POST, instance=etapa, template=template)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Etapa atualizada com sucesso!')
-            return redirect('template_detail', pk=template.pk)
+            try:
+                atualizar_etapa_via_sp(
+                    etapa_id=etapa.id,
+                    nome=form.cleaned_data['nome'],
+                    ordem=form.cleaned_data['ordem'],
+                    responsavel_id=form.cleaned_data['responsavel'].id,
+                    prazo_dias=form.cleaned_data['prazo_dias'],
+                    descricao=form.cleaned_data['descricao'],
+                    usuario_id=request.user.id
+                )
+                messages.success(request, 'Etapa atualizada com sucesso (via procedure)!')
+                return redirect('template_detail', pk=template.pk)
+            except Exception as e:
+                messages.error(request, f'Erro ao atualizar etapa: {str(e)}')
     else:
         form = EtapaForm(instance=etapa, template=template)
 
@@ -173,7 +195,6 @@ def etapa_update(request, pk):
         'template': template,
         'action': 'Editar'
     })
-
 
 # ==================== PROCESSOS ====================
 
@@ -224,18 +245,19 @@ class ProcessoListView(LoginRequiredMixin, ListView):
 
 
 class ProcessoDetailView(LoginRequiredMixin, DetailView):
-    """Detalhes de um processo"""
+    """Detalhes de um processo com validação no banco"""
     model = ProcessoInstancia
     template_name = 'processos/processo_detail.html'
     context_object_name = 'processo'
 
     def get_object(self):
         obj = super().get_object()
-        # Verifica permissão de visualização
-        if not self.request.user.pode_visualizar_processo(obj):
-            if not self.request.user.perfil in ['ADMIN', 'GESTOR']:
-                messages.error(self.request, 'Você não tem permissão para visualizar este processo.')
-                return redirect('processo_list')
+        usuario_id = getattr(self.request.user, "pk", None)
+
+        if not usuario_id or not pode_ver_processo(obj.id, usuario_id):
+            messages.error(self.request, 'Você não tem permissão para visualizar este processo.')
+            return redirect('processo_list')
+
         return obj
 
     def get_context_data(self, **kwargs):

@@ -30,6 +30,37 @@ def encaminhar_processo(processo_id: int, proxima_etapa_id: int, usuario_id: int
             'sp_encaminhar_processo',
             [processo_id, proxima_etapa_id, usuario_id, observacao]
         )
+
+def criar_etapa_via_sp(template_id, nome, ordem, responsavel_id, prazo_dias, descricao, usuario_id):
+    """Executa a funct sp_criar_etapa"""
+    with connection.cursor() as cursor:
+        cursor.callproc(
+            'sp_criar_etapa',
+            [template_id, nome, ordem, responsavel_id, prazo_dias, descricao, usuario_id]
+        )
+
+def atualizar_etapa_via_sp(etapa_id, nome, ordem, responsavel_id, prazo_dias, descricao, usuario_id):
+    """Executa a functsp_atualizar_etapa"""
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.callproc(
+            'sp_atualizar_etapa',
+            [etapa_id, nome, ordem, responsavel_id, prazo_dias, descricao, usuario_id]
+        )
+
+def get_processos_visiveis_ids(usuario_id: int):
+    """Retorna IDs de processos visíveis para o usuario"""
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id FROM fn_processos_visiveis(%s);", [usuario_id])
+        return [row[0] for row in cursor.fetchall()]
+
+def pode_ver_processo(processo_id: int, usuario_id: int) -> bool:
+    """Verifica no banco se o usuário pode ver um o processo"""
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT fn_pode_visualizar_processo(%s, %s)", [processo_id, usuario_id])
+        result = cursor.fetchone()
+    return result[0] if result else False
+
 def finalizar_processo(processo_id: int):
     run_procedure('sp_finalizar_processo', [processo_id])
 
