@@ -124,36 +124,26 @@ class Migration(migrations.Migration):
             )
             RETURNS BOOLEAN AS $$
             DECLARE
-                v_perfil TEXT;
-                v_existe BOOLEAN;
+                v_tem_permissao BOOLEAN;
             BEGIN
-                -- Pega o perfil do usuário
-                SELECT perfil INTO v_perfil FROM usuarios_usuario WHERE id = p_usuario_id;
-
-                -- Admins e Gestores podem ver tudo
-                IF v_perfil IN ('ADMIN', 'GESTOR') THEN
-                    RETURN TRUE;
-                END IF;
-
-                -- Verifica se o usuário está vinculado ao processo
-                SELECT TRUE INTO v_existe
+                SELECT TRUE
+                INTO v_tem_permissao
                 FROM processos_processoinstancia p
                 WHERE p.id = p_processo_id
                 AND (
                     p.criado_por_id = p_usuario_id OR
                     p.usuario_atual_id = p_usuario_id OR
                     EXISTS (
-                        SELECT 1 FROM processos_etapaexecucao e
+                        SELECT 1 FROM processos_etapaexecutada e
                         WHERE e.processo_id = p_processo_id
                         AND e.executado_por_id = p_usuario_id
                     )
                 )
                 LIMIT 1;
 
-                RETURN COALESCE(v_existe, FALSE);
+                RETURN COALESCE(v_tem_permissao, FALSE);
             END;
             $$ LANGUAGE plpgsql;
-
             """,
             reverse_sql="DROP FUNCTION IF EXISTS fn_pode_visualizar_processo( INT, INT);",
         ),

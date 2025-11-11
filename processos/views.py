@@ -250,15 +250,16 @@ class ProcessoDetailView(LoginRequiredMixin, DetailView):
     template_name = 'processos/processo_detail.html'
     context_object_name = 'processo'
 
-    def get_object(self):
-        obj = super().get_object()
-        usuario_id = getattr(self.request.user, "pk", None)
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        usuario_id = getattr(request.user, "pk", None)
 
         if not usuario_id or not pode_ver_processo(obj.id, usuario_id):
-            messages.error(self.request, 'Você não tem permissão para visualizar este processo.')
-            return redirect('processo_list')
+            messages.error(request, 'Você não tem permissão para visualizar este processo.')
+            #return redirect('processo_list')
 
-        return obj
+        self.object = obj
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -266,6 +267,7 @@ class ProcessoDetailView(LoginRequiredMixin, DetailView):
         context['logs'] = self.object.logs.all().order_by('-data_hora')[:20]
         context['pode_executar'] = self.object.pode_ser_executado_por(self.request.user)
         return context
+
 
 
 @login_required
