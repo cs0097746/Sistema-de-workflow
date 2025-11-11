@@ -2,13 +2,13 @@
 
 Sistema web completo desenvolvido em Python com Django para gerenciamento de workflows de processos administrativos.
 
-## 📋 Descrição
+## Descrição
 
 Sistema robusto e escalável para criação de templates de processos, execução de instâncias, controle de etapas, encaminhamento entre usuários e consultas filtradas. Ideal para automatizar e acompanhar processos administrativos em empresas.
 
-**💡 Banco de Dados:** Atualmente configurado com **SQLite** para testes. Pronto para migrar para **PostgreSQL** em produção!
+** Banco de Dados:** Atualmente configurado com **Postgresql**;
 
-## ✨ Funcionalidades
+## Funcionalidades
 
 ### Principais Features
 
@@ -26,12 +26,13 @@ Sistema robusto e escalável para criação de templates de processos, execuçã
 ## 🛠️ Tecnologias Utilizadas
 
 - **Backend**: Python 3.10+, Django 4.2+
-- **Banco de Dados**: SQLite (desenvolvimento) / PostgreSQL (produção)
+- **Banco de Dados**: PostgreSQL
+- **Monitoria**: Prometheus / Prometheus SQL Exporter / Grafana
 - **Frontend**: HTML5, Bootstrap 5, Bootstrap Icons
 - **Forms**: Django Crispy Forms + Bootstrap 5
 - **Autenticação**: Django Auth System (customizado)
 
-## 📦 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 Sistema-de-workflow/
@@ -98,7 +99,7 @@ pip install -r requirements.txt
 
 4. **Configure as variáveis de ambiente (opcional)**
 
-Copie o arquivo `.env.example` para `.env`:
+Copie o arquivo `.env.example` para `.env`: 
 ```bash
 # Windows
 copy .env.example .env
@@ -111,11 +112,11 @@ cp .env.example .env
 
 ---
 
-## 🎯 Duas Opções de Banco de Dados
+## Duas Opções de Banco de Dados
 
-### Opção A: SQLite (Padrão - Recomendado para Testes) 🚀
+### Opção A: SQLite (Padrão - Recomendado para Testes) - Foi descontinuado, agora utilizamos Postgresql
 
-✅ **Já está configurado!** Não precisa fazer nada.
+**Já está configurado!** Não precisa fazer nada.
 
 5. **Execute o script de inicialização**
 ```powershell
@@ -134,11 +135,11 @@ python manage.py runserver
 
 **Pronto!** Acesse: http://localhost:8000
 
-📖 **Veja o guia completo de testes:** `GUIA_TESTES.md`
+**Veja o guia  de testes:** `GUIA_TESTES.md`
 
 ---
 
-### Opção B: PostgreSQL (Produção) 🏢
+### Opção B: PostgreSQL (Produção)
 
 Para usar PostgreSQL ao invés de SQLite:
 
@@ -201,9 +202,7 @@ python manage.py migrate
 python manage.py popular_dados
 ```
 
-📖 **Guia completo PostgreSQL:** `SOLUCAO_ERROS.md`
-
-## 👤 Credenciais de Acesso
+## Credenciais de Acesso
 
 Após executar `python manage.py popular_dados`:
 
@@ -223,6 +222,21 @@ python manage.py runserver
 10. **Acesse o sistema**
 
 Abra o navegador em: `http://localhost:8000`
+
+### Checando monitoria
+Pra checar a monitoria é só acessar o grafana; Se for seu primeiro build, será necessário configurar os datasources do prometheus e postgres;
+hosts: http://prometheus:9090 | workflow_db:5432 (use senha e password do user da aplicação )
+
+ID's das dashboards pre-configuradas do grafana: 
+ - 12485
+ - 6742
+ - 13494
+
+Obs: precisa ter o pg_stat_statements habilitado; se o pre-shared já estiver configurado, basta rodar um CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+
+Grafana:
+http://localhost:3000 (login default admin / admin)
+
 
 ## 📚 Uso do Sistema
 
@@ -257,19 +271,19 @@ Abra o navegador em: `http://localhost:8000`
 
 ### Perfis de Usuário
 
-- **Administrador**: Acesso total, pode criar templates e gerenciar tudo
-- **Gestor**: Pode criar templates e gerenciar processos
-- **Operador**: Executa processos conforme permissões
+- **Administrador**: Acesso total, pode criar templates e gerenciar tudo (admin / admin123)
+- **Gestor**: Pode criar templates e gerenciar processos (gestor / gestor123)
+- **Operador**: Executa processos conforme permissões (operador1 / operador123)
 - **Visualizador**: Apenas visualiza processos
 
-## 🧪 Testes
+## Testes
 
 Execute os testes unitários:
 ```bash
 python manage.py test processos
 ```
 
-## 🔒 Segurança
+## Segurança
 
 - ✅ Autenticação obrigatória em todas as rotas
 - ✅ Sistema de permissões granular por etapa
@@ -277,7 +291,7 @@ python manage.py test processos
 - ✅ Senhas hasheadas com Django's PBKDF2
 - ✅ Logs de auditoria para rastreamento
 
-## 📊 Models Principais
+## Models Principais
 
 ### TemplateProcesso
 Define o fluxo de trabalho reutilizável
@@ -294,17 +308,9 @@ Registro de execução de cada etapa
 ### LogAuditoria
 Histórico completo de ações
 
-## 🎨 Interface
+## Configs Extras
 
-A interface foi desenvolvida com foco em:
-- **Usabilidade**: Navegação intuitiva
-- **Responsividade**: Funciona em desktop, tablet e mobile
-- **Modernidade**: Design limpo com Bootstrap 5
-- **Acessibilidade**: Uso de ícones e cores significativas
-
-## 🔧 Configurações Avançadas
-
-### Email para Notificações
+### Email para Notificações (Se alguém quiser brincar com isso, só conectar em algum SMTP, pode ser o mailtrap no linux por ex.)
 
 Configure no `.env`:
 ```env
